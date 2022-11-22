@@ -1,5 +1,10 @@
-# Fig pre block. Keep at the top of this file.
-[[ -f "$HOME/.fig/shell/zshrc.pre.zsh" ]] && builtin source "$HOME/.fig/shell/zshrc.pre.zsh"
+# If not running interactively, don't do anything
+[[ -o interactive ]] || return
+
+# There configs should be set before p10k instant prompt
+stty stop undef
+export GPG_TTY=$(tty)
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -7,7 +12,9 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+##
 # zinit: zsh plugin manager
+##
 source /opt/homebrew/opt/zinit/zinit.zsh
 zinit light romkatv/powerlevel10k
 
@@ -45,14 +52,27 @@ zinit cdreplay
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-if (( $+commands[lsd] )); then
+# Show me exit codes
+typeset -g POWERLEVEL9K_STATUS_ERROR=true
+
+# Load local configs
+if [[ -f ~/.zshrc.local ]]; then
+  source ~/.zshrc.local
+fi
+
+# zsh-sensible
+#if (( $+commands[lsd] )); then
   alias l='lsd -Al --date=relative --group-dirs=first --blocks=permission,user,size,date,name'
   alias ll='lsd -l --date=relative --group-dirs=first --blocks=permission,user,size,date,name'
   alias lt='lsd --tree --depth=2 --date=relative --group-dirs=first'
-else
-  alias l='ls -alh'
-  alias ll='ls -lh'
-fi
+#else
+#  alias l='ls -alh'
+#  alias ll='ls -lh'
+#fi
+
+HISTSIZE=90000
+SAVEHIST=90000
+HISTFILE=~/.zsh_history
 
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
 
@@ -77,11 +97,12 @@ alias tfap='terraform apply -parallelism=30'
 CHAI_ROOT="~/dev/github.chaicloud.io"
 alias chaidir="cd $CHAI_ROOT"
 alias tfdir="cd $CHAI_ROOT/chai-terraform"
-alias gcpdir="cd $CHAI_ROOT/chai-terraform/gcp && export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/terraform-account-sa.json"
 alias tfmdir="cd $CHAI_ROOT/chai-terraform-modules"
+alias gcpdir="cd $CHAI_ROOT/chai-terraform/gcp && export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/terraform-account-sa.json"
 alias kdir="cd $CHAI_ROOT/chai-kubernetes"
 alias metadir="cd $CHAI_ROOT/chai-deploy-metadata"
-alias testdir="cd ~/dev/chai-devops/swarm-network-test"
+alias intldir="cd ~/dev/iamport-intl"
+alias datadir="cd ~/dev/gitlab"
 
 PORT_ROOT="~/dev/iamport"
 alias portdir="cd $PORT_ROOT"
@@ -90,22 +111,21 @@ alias portdir="cd $PORT_ROOT"
 
 # aws/k8s
 alias ckey="op item get wallet-keycloak-mk --field type=otp --format json | jq -r .totp | pbcopy"
-alias chai-dev="cd $CHAI_ROOT/chai-terraform/aws/wallet-dev && saml2aws login -a chai-aws-dev --quiet --skip-prompt && aws-profile chai-aws-dev && kubectx chai-dev"
-alias chai-stg="cd $CHAI_ROOT/chai-terraform/aws/wallet-stg && saml2aws login -a chai-aws-stg --quiet --skip-prompt && aws-profile chai-aws-stg && kubectx chai-stg"
-alias chai-prod="cd $CHAI_ROOT/chai-terraform/aws/wallet-prod && saml2aws login -a chai-aws-prod --quiet --skip-prompt && aws-profile chai-aws-prod && kubectx chai-prod"
-alias chai-infra="cd $CHAI_ROOT/chai-terraform/aws/wallet-infra && saml2aws login -a chai-aws-infra --quiet --skip-prompt && aws-profile chai-aws-infra && kubectx chai-infra"
+alias chai-dev="cd $CHAI_ROOT/chai-terraform/aws/wallet-dev && aws-profile chai-aws-dev && kubectx chai-dev"
+alias chai-stg="cd $CHAI_ROOT/chai-terraform/aws/wallet-stg && aws-profile chai-aws-stg && kubectx chai-stg"
+alias chai-prod="cd $CHAI_ROOT/chai-terraform/aws/wallet-prod && aws-profile chai-aws-prod && kubectx chai-prod"
+alias chai-infra="cd $CHAI_ROOT/chai-terraform/aws/wallet-infra && aws-profile chai-aws-infra && kubectx chai-infra"
+#alias aws_infra_console="open -a '/Applications/Google Chrome.app' 'https://keycloak.chaicloud.io/auth/realms/chai-card/protocol/saml/clients/chai-aws-infra'"
+alias pkey="op item get port/keycloak/mk --field type=otp --format json | jq -r .totp | pbcopy"
+alias port-dev="cd $CHAI_ROOT/chai-terraform/aws/port-dev && aws-profile port-aws-dev && kubectx port-dev"
+alias port-stg="cd $CHAI_ROOT/chai-terraform/aws/port-stg && aws-profile port-aws-stg && kubectx port-stg"
+alias port-prod="cd $CHAI_ROOT/chai-terraform/aws/port-prod && aws-profile port-aws-prod && kubectx port-prod"
+alias port-infra="cd $CHAI_ROOT/chai-terraform/aws/port-infra && aws-profile port-aws-infra"
+
+# ssh
 alias _ssh="vault write -field=signed_key ssh-client-signer/sign/ec2-user public_key=@$HOME/.ssh/mk-gitea.pub > $HOME/.ssh/chai-signed.pub && ssh -i ~/.ssh/mk-gitea.pub -i ~/.ssh/chai-signed.pub $1"
 alias _ssh_admin="vault write -field=signed_key ssh-client-signer/sign/admin public_key=@$HOME/.ssh/mk-gitea.pub > $HOME/.ssh/chai-signed.pub && ssh -i ~/.ssh/mk-gitea.pub -i ~/.ssh/chai-signed.pub $1"
 alias _ssh_centos="vault write -field=signed_key ssh-client-signer/sign/centos public_key=@$HOME/.ssh/mk-gitea.pub > $HOME/.ssh/chai-signed.pub && ssh -i ~/.ssh/mk-gitea.pub -i ~/.ssh/chai-signed.pub $1"
-#alias aws_infra_console="open -a '/Applications/Google Chrome.app' 'https://keycloak.chaicloud.io/auth/realms/chai-card/protocol/saml/clients/chai-aws-infra'"
-alias pkey="op item get port/keycloak/mk --field type=otp --format json | jq -r .totp | pbcopy"
-alias port-dev="saml2aws login -a port-aws-dev --quiet --skip-prompt && aws-profile port-aws-dev && kubectx port-dev"
-alias port-stg="saml2aws login -a port-aws-stg --quiet --skip-prompt && aws-profile port-aws-stg && kubectx port-stg"
-alias port-prod="saml2aws login -a port-aws-prod --quiet --skip-prompt && aws-profile port-aws-prod && kubectx port-prod"
-alias port-infra="saml2aws login -a port-aws-infra --quiet --skip-prompt && aws-profile port-aws-infra"
-
-# gcp
-export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/terraform-account-sa.json
 
 # java
 # export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
@@ -168,11 +188,6 @@ awsregion() {
   fzf --ansi | xargs aws configure set region
 }
 
-
-
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
-
-# Fig post block. Keep at the bottom of this file.
-[[ -f "$HOME/.fig/shell/zshrc.post.zsh" ]] && builtin source "$HOME/.fig/shell/zshrc.post.zsh"
