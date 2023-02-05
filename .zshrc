@@ -18,11 +18,10 @@ fi
 source /opt/homebrew/opt/zinit/zinit.zsh
 zinit light romkatv/powerlevel10k
 
-ZSH_AUTOSUGGEST_USE_ASYNC=1
-if is-at-least 5.3; then
-  zinit ice silent wait'1' atload'_zsh_autosuggest_start'
-fi
-
+# ZSH_AUTOSUGGEST_USE_ASYNC=1
+# if is-at-least 5.3; then
+#   zinit ice silent wait'1' atload'_zsh_autosuggest_start'
+# fi
 zinit light zsh-users/zsh-autosuggestions
 
 # Easily access the directories you visit most often
@@ -93,6 +92,9 @@ alias tff='terraform fmt -recursive'
 alias tfa='terraform apply'
 alias tfap='terraform apply -parallelism=30'
 
+# git
+alias gdy='ydiff -s --wrap --staged'
+
 # cd
 CHAI_ROOT="~/dev/github.chaicloud.io"
 alias chaidir="cd $CHAI_ROOT"
@@ -100,7 +102,8 @@ alias tfdir="cd $CHAI_ROOT/chai-terraform"
 alias tfmdir="cd $CHAI_ROOT/chai-terraform-modules"
 alias gcpdir="cd $CHAI_ROOT/chai-terraform/gcp && export GOOGLE_APPLICATION_CREDENTIALS=~/.gcp/terraform-account-sa.json"
 alias kdir="cd $CHAI_ROOT/chai-kubernetes"
-alias metadir="cd $CHAI_ROOT/chai-deploy-metadata"
+alias cmdir="cd $CHAI_ROOT/chai-deploy-metadata"
+alias pmdir="cd $CHAI_ROOT/port-deploy-metadata"
 alias intldir="cd ~/dev/iamport-intl"
 alias datadir="cd ~/dev/gitlab"
 
@@ -120,7 +123,9 @@ alias pkey="op item get port/keycloak/mk --field type=otp --format json | jq -r 
 alias port-dev="cd $CHAI_ROOT/chai-terraform/aws/port-dev && aws-profile port-aws-dev && kubectx port-dev"
 alias port-stg="cd $CHAI_ROOT/chai-terraform/aws/port-stg && aws-profile port-aws-stg && kubectx port-stg"
 alias port-prod="cd $CHAI_ROOT/chai-terraform/aws/port-prod && aws-profile port-aws-prod && kubectx port-prod"
-alias port-infra="cd $CHAI_ROOT/chai-terraform/aws/port-infra && aws-profile port-aws-infra"
+alias port-infra="cd $CHAI_ROOT/chai-terraform/aws/port-infra && aws-profile port-aws-infra && kubectx port-infra"
+
+alias port-aws="saml2aws login -a port-aws-dev --skip-prompt && saml2aws login -a port-aws-stg --skip-prompt && saml2aws login -a port-aws-prod --skip-prompt && saml2aws login -a port-aws-infra --skip-prompt"
 
 # ssh
 alias _ssh="vault write -field=signed_key ssh-client-signer/sign/ec2-user public_key=@$HOME/.ssh/mk-gitea.pub > $HOME/.ssh/chai-signed.pub && ssh -i ~/.ssh/mk-gitea.pub -i ~/.ssh/chai-signed.pub $1"
@@ -149,11 +154,18 @@ export VAULT_ADDR=https://vault.iamport.co
 
 # kubectl
 alias k=kubectl
+alias kn=kubens
+alias kc=kubectx
 complete -F __start_kubectl k
 export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$HOME/istio-1.10.0/bin:$PATH"
 
 [[ /usr/local/bin/kubectl ]] && source <(kubectl completion zsh)
 
+source <(helm completion zsh)
+
+
+# aws
+alias awsec2list="aws ec2 describe-instances --query \"Reservations[*].Instances[*].{InstanceId:InstanceId,Name:Tags[?Key=='Name']|[0].Value,Status:State.Name}\" --output table --no-cli-pager"
 
 ## aws profile
 CMD_NAME=aws-profile
@@ -166,7 +178,6 @@ $CMD_NAME() {
     aws sts get-caller-identity --output table --no-cli-pager
 }
 compdef _comp-$CMD_NAME $CMD_NAME
-
 
 ## AWSCLIv2
 complete -C aws_completer aws
