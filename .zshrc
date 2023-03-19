@@ -125,6 +125,7 @@ alias port-stg="cd $CHAI_ROOT/chai-terraform/aws/port-stg && aws-profile port-aw
 alias port-prod="cd $CHAI_ROOT/chai-terraform/aws/port-prod && aws-profile port-aws-prod && kubectx port-prod"
 alias port-infra="cd $CHAI_ROOT/chai-terraform/aws/port-infra && aws-profile port-aws-infra && kubectx port-infra"
 
+alias chai-aws="saml2aws login -a chai-aws-dev --skip-prompt && saml2aws login -a chai-aws-stg --skip-prompt && saml2aws login -a chai-aws-prod --skip-prompt && saml2aws login -a chai-aws-infra --skip-prompt"
 alias port-aws="saml2aws login -a port-aws-dev --skip-prompt && saml2aws login -a port-aws-stg --skip-prompt && saml2aws login -a port-aws-prod --skip-prompt && saml2aws login -a port-aws-infra --skip-prompt"
 
 # ssh
